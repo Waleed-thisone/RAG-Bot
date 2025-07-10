@@ -6,24 +6,23 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
 
-# Load .env
 load_dotenv()
 api_key = os.getenv("OPENROUTER_API_KEY")
 
-# Load and prepare documents once
-loader = DirectoryLoader("docs/", glob="**/*.txt", loader_cls=TextLoader)
-docs = loader.load()
-
-splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
-chunks = splitter.split_documents(docs)
-
-embedding = OpenAIEmbeddings()
-vectordb = Chroma.from_documents(chunks, embedding)
-retriever = vectordb.as_retriever(search_type="similarity", k=3)
-
 def get_answer(user_query: str) -> str:
-    docs = retriever.get_relevant_documents(user_query)
-    context = "\n\n".join([doc.page_content for doc in docs])
+    # Load documents only when function is called
+    loader = DirectoryLoader("docs/", glob="**/*.txt", loader_cls=TextLoader)
+    docs = loader.load()
+
+    splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
+    chunks = splitter.split_documents(docs)
+
+    embedding = OpenAIEmbeddings()
+    vectordb = Chroma.from_documents(chunks, embedding)
+    retriever = vectordb.as_retriever(search_type="similarity", k=3)
+
+    relevant_docs = retriever.get_relevant_documents(user_query)
+    context = "\n\n".join([doc.page_content for doc in relevant_docs])
 
     prompt = f"""Use the context below to answer the question.\n\nContext:\n{context}\n\nQuestion: {user_query}"""
 
