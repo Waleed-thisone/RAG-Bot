@@ -1,10 +1,6 @@
-fastapi
-uvicorn
 langchain
 langchain-community
-faiss-cpu
-requests
-python-dotenv
 sentence-transformers
-
-
+faiss-cpu
+python-dotenv
+requests

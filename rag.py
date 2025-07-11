@@ -1,37 +1,23 @@
 import os
 import requests
 from dotenv import load_dotenv
-from langchain_community.document_loaders import DirectoryLoader, TextLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
+from langchain_community.embeddings import HuggingFaceEmbeddings
 
+# Load environment variables
 load_dotenv()
 api_key = os.getenv("OPENROUTER_API_KEY")
 
-print("Loading files...")
-loader = DirectoryLoader("docs/", glob="**/*.txt", loader_cls=TextLoader)
-docs = loader.load()
-print(f"✅ Loaded {len(docs)} files")
-
-print("Splitting into chunks...")
-splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
-chunks = splitter.split_documents(docs)
-print(f"✅ Total chunks: {len(chunks)}")
-
-print("Creating embeddings...")
+# Load prebuilt index
 embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-
-print("Building FAISS vectorstore...")
-vectordb = FAISS.from_documents(chunks, embedding)
+vectordb = FAISS.load_local("faiss_index", embedding)
 retriever = vectordb.as_retriever(search_type="similarity", k=3)
-print("Done.")
 
 def get_answer(user_query: str) -> str:
     relevant_docs = retriever.get_relevant_documents(user_query)
     context = "\n\n".join([doc.page_content for doc in relevant_docs])
 
-    prompt = f"""Use the context below to answer the question.Dont use words like based on provided context or anything just straight answer\n\nContext:\n{context}\n\nQuestion: {user_query}"""
+    prompt = f"""Use the context below to answer the question. Don't use words like based on provided context or anything, just give a straight answer.\n\nContext:\n{context}\n\nQuestion: {user_query}"""
 
     headers = {
         "Authorization": f"Bearer {api_key}",
