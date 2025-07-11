@@ -18,6 +18,7 @@ def get_answer(user_query: str) -> str:
     chunks = splitter.split_documents(docs)
 
     embedding = OpenAIEmbeddings()
+
     vectordb = Chroma.from_documents(chunks, embedding)
     retriever = vectordb.as_retriever(search_type="similarity", k=3)
 
