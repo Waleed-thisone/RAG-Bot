@@ -1,6 +1,9 @@
 fastapi
 uvicorn
-python-dotenv
 langchain
-chromadb
+langchain-community
+faiss-cpu
 requests
+python-dotenv
+
+
